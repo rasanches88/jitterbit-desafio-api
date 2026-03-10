@@ -27,6 +27,6 @@ model Item {
   productId String
   quantity  Int
   price     Float
-  order     Order @relation(fields: [orderId], references: [id])
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   orderId   String @db.ObjectId
 }

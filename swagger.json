@@ -1,0 +1,78 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Pedidos",
+        "description": "Documentação da API de Pedidos",
+        "version": "1.0.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/order": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "numeroPedido": {
+                                        "type": "string"
+                                    },
+                                    "valorTotal": {
+                                        "type": "number"
+                                    },
+                                    "dataCriacao": {
+                                        "type": "string"
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                 "idItem": {
+                                                    "type": "string"
+                                                 },
+                                                 "quantidadeItem": {
+                                                    "type": "number"
+                                                 },
+                                                 "valorItem": {
+                                                    "type": "number"
+                                                 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Pedido criado"
+                    },
+                    "500": {
+                        "description": "Pedido já criado"
+                    }
+                }
+            }
+        },
+        "/order/{orderId}": {
+            "get": {
+                "parameters": {
+                    "in": "query",
+                    "name": "orderId",
+                    "type": "string",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pedido retornado"
+                    },
+                    "500": {
+                        "description": "Pedido não encontrado"
+                    }
+                }
+            }
+        }
+    }
+}

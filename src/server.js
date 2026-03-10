@@ -2,6 +2,9 @@ import express from 'express';
 import { PrismaClient } from '../generated/prisma/client.ts';
 import { PrismaClientKnownRequestError } from '../generated/prisma/internal/prismaNamespace.ts';
 
+import swaggerUI from 'swagger-ui-express';
+import swaggerDocument from '../swagger.json' with { type: "json" };
+
 const app = express();
 const prisma = new PrismaClient();
 const PORT = 3000;
@@ -13,8 +16,14 @@ app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
 
+
 // Para entender JSON
 app.use(express.json());
+
+
+// Swagger
+app.use('/swagger', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
+
 
 // Cria novo pedido
 app.post('/order', async (req, res) => {
@@ -57,6 +66,7 @@ app.post('/order', async (req, res) => {
     }    
 });
 
+
 // Obtém os dados do pedido passando o número do pedido por parâmetro na URL
 app.get('/order/:orderId', async (req, res) => {
     try {
@@ -92,6 +102,7 @@ app.get('/order/:orderId', async (req, res) => {
     }
 });
 
+
 // Lista todos os pedidos
 app.get('/order', async (_req, res) => {
     try {
@@ -126,4 +137,69 @@ app.get('/order', async (_req, res) => {
 
         return res.status(INTERNAL_SERVER_ERROR).json({error: "Erro interno"});
     }
+});
+
+
+// Atualiza pedido passando o número do pedido por parâmetro na URL
+app.put('/order/:orderId', async (req, res) => {
+
+    try {
+        // Mapeamento dos campos de Items
+        let renamedItems = req.body.items.map(item => {
+            return {
+                productId : item.idItem,
+                quantity : item.quantidadeItem,
+                price : item.valorItem
+            }
+        });
+
+        // Atualiza pedido na base
+        await prisma.order.update({
+            where: {
+                orderId: req.params.orderId
+            },
+            data: {
+                orderId: req.body.numeroPedido,
+                value: req.body.valorTotal,
+                creationDate: req.body.dataCriacao,
+                items: {
+                   create: renamedItems
+                }
+            }
+        });
+
+        console.log('Pedido atualizado!');
+
+        return res.status(CREATED).json(req.body);
+    } catch (error) {
+        console.error("An error occurred:", error.message);
+
+        return res.status(INTERNAL_SERVER_ERROR).json({error: "Erro interno"});
+    }    
+});
+
+
+// Apaga pedido passando o número do pedido por parâmetro na URL
+app.delete('/order/:orderId', async (req, res) => {
+
+    try {
+        // Apaga pedido na base
+        const deletedOrder = await prisma.order.delete({
+            where: {
+                orderId: req.params.orderId
+            }
+        });
+
+        console.log('Pedido apagado!');
+
+        return res.status(OK).json({message: 'Pedido apagado'});
+    } catch (error) {
+        console.error("An error occurred:", error.message);
+
+        if (error instanceof PrismaClientKnownRequestError) {
+            return res.status(INTERNAL_SERVER_ERROR).json({error: "Pedido não encontrado"});
+        }
+
+        return res.status(INTERNAL_SERVER_ERROR).json({error: "Erro interno"});
+    }    
 });
